@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Escáner de Código QR</title>
+</head>
+<style>
+    body {
+        background: url("https://png.pngtree.com/thumb_back/fw800/background/20200318/pngtree-tropical-plant-blue-purple-neon-effect-leaves-business-background-image_331974.jpg") center center fixed;
+        background-size: cover;
+        background-repeat: no-repeat;
+        margin: 0;
+        height: 80vh;
+        text-align: center;
+    }
+
+    h1 {
+        -webkit-text-stroke: 0.1px black;
+        color: white;
+        border-bottom: none;
+        margin-bottom: 0;
+        font-size: 36px;
+        font-family: Stencil;
+        text-shadow: 12px 12px 12px black;
+    }
+
+    h2 {
+        -webkit-text-stroke: 0.1px black;
+        color: white;
+        border-bottom: none;
+        margin-bottom: 0;
+        font-family: Stencil;
+        font-size: 28px;
+        text-shadow: 12px 12px 12px black;
+    }
+
+    form {
+        text-align: center;
+        padding: 5px;
+        border: 1px solid #fff;
+        border-radius: 15px;
+        background-color: rgba(0, 0, 0, 0.7); /* Fondo semitransparente en el formulario */
+        box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+        width: 50%;
+        color: white;
+    }
+
+    label {
+        margin-top: 10px;
+    }
+
+    input,
+    select,
+    textarea {
+        width: 30%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 2px solid #ccc;
+        border-radius: 15px;
+        font-size: 12px;
+    }
+
+    textarea {
+        height: 40px;
+    }
+
+    input[type="submit"] {
+        align: center;
+        background-color: #BC37C2;
+        color: #ffffff;
+        border: none;
+        border-radius: 15px;
+        width: 95%;
+        padding: 10px 10px;
+        font-size: 14px;
+        cursor: pointer;
+        font-family: "Stencil";
+    }
+
+    input[type="submit"]:hover {
+        background-color: purple;
+    }
+
+    .elem-group {
+        width: 50%; /* Puedes ajustar el ancho según tus necesidades */
+    }
+
+    .elem-group input {
+        width: 50%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 2px solid #ccc;
+        border-radius: 3px;
+        font-size: 12px;
+    }
+	video {
+        max-width: 70%; /* Ajustar el tamaño del video según el contenedor */
+        height: auto;
+    }
+</style>
+<body>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>  
+<p>
+    <h1><font-family: "BankGothic"><b>INGENIERÍA LAND SECURITY 2.0</b></font></h1>
+</p>
+</br>
+<h1><font-family: "BankGothic"><b>Escáner de Código QR</b></font></h1>
+<center>
+    <!-- Agregar un elemento de video para mostrar la vista de la cámara -->
+    <video id="qr-video" width="420" height="240" autoplay></video>
+    
+    <!-- Agregar un elemento para mostrar el resultado del escaneo -->
+    <p id="qr-result"></p>
+    
+    <!-- Incluir el script de la librería de jsQR para el decodificador QR -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@2.0.0/dist/jsQR.js"></script>
+    
+    <script>
+        // Función para acceder a la cámara y leer códigos QR
+        async function startQRScanner() {
+        const videoElement = document.getElementById('qr-video');
+        const qrResultElement = document.getElementById('qr-result');
+            
+            try {
+            // Acceder a la cámara del dispositivo
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            videoElement.srcObject = stream;
+
+            // Crear un bucle para capturar los fotogramas de video y buscar códigos QR
+            const qrWorker = new Worker("jsQR.js");
+            qrWorker.postMessage({ type: "init", data: {} });
+
+            const onFrame = () => {
+                if (videoElement.readyState === videoElement.HAVE_ENOUGH_DATA) {
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.width = videoElement.videoWidth;
+                    canvas.height = videoElement.videoHeight;
+                    context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+                    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+                    qrWorker.postMessage({ type: "decode", data: imageData });
+                }
+                requestAnimationFrame(onFrame);
+            };
+            requestAnimationFrame(onFrame);
+
+            qrWorker.onmessage = (e) => {
+                const result = e.data;
+                if (result.type === "decoded") {
+                    // Aquí asumimos que el contenido del código QR es el ID de entrada
+                    const entradaID = result.data;
+                    qrResultElement.textContent = `ID de entrada escaneado: ${entradaID}`;
+
+                    // Puedes realizar acciones adicionales con el ID de entrada, como enviarlo a un servidor o mostrar información relacionada.
+                    // Por ejemplo, puedes hacer una solicitud HTTP para obtener detalles de la entrada utilizando el ID.
+					//AAAAAA
+                }
+            };
+        } catch (error) {
+            console.error('Error al acceder a la cámara:', error);
+        }
+    }
+
+    // Iniciar el escáner al cargar la página
+    startQRScanner();
+    </script>
+</body>
+</html>
